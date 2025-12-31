@@ -1,90 +1,215 @@
 ## Bitmap Distribution Format
-This section is to explaing how the .bdf(Bitmap Distribution Format) files works.
+This section is to explaing how the .bdf (Bitmap Distribution Format) files works.
 The .bdf file store the font as a collection of bitmaps witch represent each letter (glyph in the code) in the font.
-As example consider a bitmap for the letter 'R':
+These bitmaps are stored as hexadecimal numbers.
+As example consider a bitmaps for the letters 'R' and 'P':
 
-00
-00
-F0
-88
-88
-F0
-88
-88
-88
-00
-00
-00
-00
+In the first column is the hexadecimal numbers for each line in the bitmap.
+In the second column is the same number but in binary.
+In the third column we remove the 0's to visualice the character.
+In the Forth column we replace the 1's with a solid block (█).
 
-As you may notice each line is a hexadecimal number, lets see this looks as a binary numbers:
+    ┌──┬────────┬────────┬────────┐
+    │00│00000000│        │        │
+    │00│00000000│        │        │
+    │F0│11110000│1111    │████    │
+    │88│10001000│1   1   │█   █   │
+    │88│10001000│1   1   │█   █   │
+    │F0│11110000│1111    │████    │
+    │88│10001000│1   1   │█   █   │
+    │88│10001000│1   1   │█   █   │
+    │88│10001000│1   1   │█   █   │
+    │00│00000000│        │        │
+    │00│00000000│        │        │
+    │00│00000000│        │        │
+    │00│00000000│        │        │
+    ├──┼────────┼────────┼────────┤
+    │00│00000000│        │        │
+    │00│00000000│        │        │
+    │00│00000000│        │        │
+    │00│00000000│        │        │
+    │F0│11110000│1111    │████    │
+    │88│10001000│1   1   │█   █   │
+    │88│10001000│1   1   │█   █   │
+    │88│10001000│1   1   │█   █   │
+    │F0│11110000│1111    │████    │
+    │80│10000000│1       │█       │
+    │80│10000000│1       │█       │
+    │00│00000000│        │        │
+    │00│00000000│        │        │
+    └──┴────────┴────────┴────────┘
 
-00000000
-00000000
-11110000
-10001000
-10001000
-11110000
-10001000
-10001000
-10001000
-00000000
-00000000
-00000000
-00000000
 
-If you remove all the '0' in the bitmap you can see how the letter 'R' appears.
-
-1111
-1   1
-1   1
-1111
-1   1
-1   1
-1   1
-
-To see it better we can replace the 1's with a solid block (█)
-
-████
-█   █
-█   █
-████
-█   █
-█   █
-█   █
 
 For each bitmap there are some other important data that is store in the file.
 
 ## ENCODING
-The encoding is the unicode code point of the character.
-For example, for the letter 'R' the encoding value is 82.
+The encoding is the unicode code of the character.
+For example:
+For the letter 'R' the encoding value is 82.
+For the letter 'P' the encoding value is 112.
 
 ## DWIDTH
-This value indicates how many spaces after the next letter should be draw.
-For example, lets say we want to keep one space between letters, therefore for the previous 'R' bitmap we would need a spacing of 6, since our bit map takes a maximun of 5 bits, this would give us that the dwidth is 6.
+This value indicates at what distance the next character is draw after the current character.
+For example, in the following diagram the character 'R' has a dwith of 6, since the next character is draw after 6 spaces, and the character 'P' has a dwidth of 7, since the next character is draw after 7 spaces.
 
+       6     7
+     ╭─^──╮╭─^───╮
+    ┌┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┬┐
+    │                   │
+    │                   │
+    │████         ████  │
+    │█   █        █   █ │
+    │█   █ ████   █   █ │
+    │████  █   █  ████  │
+    │█   █ █   █  █   █ │
+    │█   █ █   █  █   █ │
+    │█   █ ████   █   █ │
+    │      █            │
+    │      █            │
+    │                   │
+    │                   │
+    └───────────────────┘
+
+### Bounding Box
+The bounding box is a box that surrounds the character, it contains the following data:
+Width, height, x-offset and y-offset.
+The origin of the bounding box is at the botton left of the box, if our character base is not aligned with this origin we can use the offset to move the character at the point that aligns with the base of the box.
+For example, consider the 'R' and 'P' characters, lets give them a bounding box with:
+width = 6
+height = 11
+x-offset = 0
+y-offset = -2
+
+                         width        ┌──────┐    ╮     
+                         ╭─^──╮       │      │    ├ y-offset
+    ┌--------┐          ┌──────┬-┐    ├------┼-┐  ╯
+    ¦        ¦        ╭ │      │ ¦    │      │ ¦
+    ¦        ¦        │ │      │ ¦    │      │ ¦
+    ¦████    ¦        │ │████  │ ¦    │████  │ ¦
+    ¦█   █   ¦        │ │█   █ │ ¦    │█   █ │ ¦
+    ¦█   █   ¦        │ │█   █ │ ¦    │█   █ │ ¦
+    ¦████    ¦ height ┤ │████  │ ¦    │████  │ ¦
+    ¦█   █   ¦        │ │█   █ │ ¦    │█   █ │ ¦
+    ¦█   █   ¦        │ │█   █ │ ¦    │█   █ │ ¦
+    ¦█   █   ¦        │ │█   █ │ ¦    │█   █ │ ¦
+    ¦        ¦        │ │      │ ¦    ├──────┘ ¦
+    ¦        ¦        ╰ │      │ ¦    ¦        ¦
+    ¦        ¦          ├──────┘ ¦    ¦        ¦
+    ¦        ¦          ¦        ¦    ¦        ¦
+    └--------┘          └--------┘    └--------┘
+
+                         width        ┌──────┐    ╮     
+                         ╭─^──╮       │      │    ├ y-offset
+    ┌--------┐          ┌──────┬-┐    ├------┼-┐  ╯
+    ¦        ¦        ╭ │      │ ¦    │      │ ¦
+    ¦        ¦        │ │      │ ¦    │      │ ¦
+    ¦        ¦        │ │      │ ¦    │      │ ¦
+    ¦        ¦        │ │      │ ¦    │      │ ¦
+    ¦████    ¦        │ │████  │ ¦    │████  │ ¦
+    ¦█   █   ¦ height ┤ │█   █ │ ¦    │█   █ │ ¦
+    ¦█   █   ¦        │ │█   █ │ ¦    │█   █ │ ¦
+    ¦█   █   ¦        │ │█   █ │ ¦    │█   █ │ ¦
+    ¦████    ¦        │ │████  │ ¦    │████  │ ¦
+    ¦█       ¦        │ │█     │ ¦    ├█─────┘ ¦
+    ¦█       ¦        ╰ │█     │ ¦    ¦█       ¦
+    ¦        ¦          ├──────┘ ¦    ¦        ¦
+    ¦        ¦          ¦        ¦    ¦        ¦
+    └--------┘          └--------┘    └--------┘
+
+
+The file stores two types of bounding boxes
 ## BBX
-Bounding Box gave us the width and height of the box that surrounds the character, also it gave us the horizontal and vertical offset positions.
-For example, lets take the previous 'R' case.
-The width and height are 6 and 13
-The horizontal and vertical offset are 0 and -4
-Note: The y-offset is -4 since the reference point is taken as the base of the letter.
+A specific bounding box for each character in the file.
 
-
-Beside the previous data there is also the font bounding box, whitch is general for the font:
 ## FONTBOUNDINGBOX
-Font bounding box is similar to the BBX, but it is general for the font.
-For example:
-The width and height can be 10 and 11
-The horizontal and vertical offset can be 0 and -2
+A general bounding box for the font, it is the same for all the characters.
 
 
-There can be more data store in the file, but for the pyxel library these are the only data that is taken, all other parameters are ignored.
+## Other
+The following data is stored in the .bdf file, but it is not readed by pyxel.
+
+### STARTFONT
+This is the first line in the file, the number indicates the bdf version.
+Example: STARTFONT 2.1
+
+### FONT
+This indicates the name of the font.
+Example: FONT MyPixelFont
+
+### CHARS
+This indicates the total number of bitmaps in the file.
+Example: CHARS 97
+
+### STARTCHAR
+This is the first line of each bitmap in the file, the number indicates the unicode code of the character in hexadecimal.
+Example: STARTCHAR 0x112
 
 
----
+The following is an example of a .bdf file.
 
-Important, this is done on the pyxel version: 2.5.10
+```
+STARTFONT 2.1
+FONT MyPixelFont
+SIZE 8 75 75
+FONTBOUNDINGBOX 8 8 0 0
+STARTPROPERTIES 3
+FONT_ASCENT 7
+FONT_DESCENT 1
+DEFAULT_CHAR 0
+ENDPROPERTIES
+CHARS 3
+STARTCHAR 0x00
+ENCODING 0
+SWIDTH 500 0
+DWIDTH 9 0
+BBX 8 8 0 0
+BITMAP
+18
+24
+42
+81
+81
+42
+24
+18
+ENDCHAR
+STARTCHAR 0x01
+ENCODING 1
+SWIDTH 500 0
+DWIDTH 9 0
+BBX 8 8 0 0
+BITMAP
+FF
+81
+81
+81
+81
+81
+81
+FF
+ENDCHAR
+STARTCHAR 0x02
+ENCODING 2
+SWIDTH 500 0
+DWIDTH 9 0
+BBX 8 8 0 0
+BITMAP
+00
+7E
+42
+66
+0C
+18
+00
+10
+ENDCHAR
+ENDFONT
+```
+
+----
+
+The following description uses pyxel 2.5.10
 
 To create a font editor, we first need to undestand how the pyxel lib read the files and print the font in the screen.
 
@@ -96,47 +221,41 @@ We need to focus on two importatn parts, what part is readed from the file and h
 ## Reading the File
 On lines 49 to 107 you can see how data is extracted from the .bdf file
 
-• The font bounding box (width, height, x, y) is extracted from the line that start with "FONTBOUNDINGBOX". Only one per file.
-Example:
-FONTBOUNDINGBOX 10 11 0 -2
+The following data is extracted from the file:
+• Font bounding box, this is readed as "FONTBOUNDINGBOX width, height, x-offset, y-offset" ( FONTBOUNDINGBOX 10 11 0 -2 )
+• Encoding, this is readed as "ENCODING encoding" ( ENCODING 122 )
+• Dwidth, this is readed as "DWIDTH dwidth 0" ( DWIDTH 7 0 ), only the first number is taken.
+• Bounding box, this is readed as "BBX width, height, x-offset, y-offset" ( BBX 6 13 0 -4 )
+• Bitmap, read all the lines between BITMAP and ENDCHAR, each bitmap line is store as the reversed binary.
 
-• The encoding number is extracted from the line that start with "ENCODING". One per glyph. This is the char value, like "a" is 97.
-Example:
-ENCODING 12288
-
-• The dwidth number is extracted from the line that start with "DWIDTH". One per glyph. Only the first number is taken.
-Example:
-DWIDTH 10 0
-
-• The bounding box (width, height, x, y) is extracted from the line that start with "BBX". One per glyph.
-Example:
-BBX 10 11 0 -2
-
-• The bitmap data is taken from the lines that are between "BITMAP" and "ENDCHAR". One per glyph.
-Example:
-BITMAP
-00
-00
-F0
-88
-88
-F0
-88
-88
-88
-00
-00
-00
-00
-ENDCHAR
-
-All data is store as the readed number, except for the bitmap, these pass for a proccess to reverse the binary values.
-The steps to reverse the binary values per line is:
+### Bitmap
+Steps to reverse the binary from the file:
 • The hex value is transform to a 32-bit integer.
 • Bits are reversed
 • Right shift by (32 - line_lenght * 4)
-Example:
-Lets consider the line "F0"
+
+For example:
+Consider the following bitmap.
+
+    ┌───────┐
+    │BITMAP │
+    │00     │
+    │00     │
+    │F0     │
+    │88     │
+    │88     │
+    │F0     │
+    │88     │
+    │88     │
+    │88     │
+    │00     │
+    │00     │
+    │00     │
+    │00     │
+    │ENDCHAR│
+    └───────┘
+
+Lets take the line "F0"
 This value as binary is: 11110000
 Since the value is store as a 32-bit, we can see it as: 00000000000000000000000011110000
 Reversing the bits led to: 00001111000000000000000000000000
