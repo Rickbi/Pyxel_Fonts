@@ -1,12 +1,12 @@
-## Bitmap Distribution Format
-This section is to explaing how the .bdf (Bitmap Distribution Format) files works.
+# Bitmap Distribution Format
+This file is to explaing how the .bdf (Bitmap Distribution Format) files works and how pyxel read them and draw the text using this file content.
 The .bdf file store the font as a collection of bitmaps witch represent each letter (glyph in the code) in the font.
 These bitmaps are stored as hexadecimal numbers.
 As example consider a bitmaps for the letters 'R' and 'P':
 
 In the first column is the hexadecimal numbers for each line in the bitmap.
 In the second column is the same number but in binary.
-In the third column we remove the 0's to visualice the character.
+In the third column we remove the 0's to visualice the characters 'R' and 'P'.
 In the Forth column we replace the 1's with a solid block (█).
 
     ┌──┬────────┬────────┬────────┐
@@ -39,8 +39,6 @@ In the Forth column we replace the 1's with a solid block (█).
     │00│00000000│        │        │
     └──┴────────┴────────┴────────┘
 
-
-
 For each bitmap there are some other important data that is store in the file.
 
 ## ENCODING
@@ -72,9 +70,8 @@ For example, in the following diagram the character 'R' has a dwith of 6, since 
     └───────────────────┘
 
 ### Bounding Box
-The bounding box is a box that surrounds the character, it contains the following data:
-Width, height, x-offset and y-offset.
-The origin of the bounding box is at the botton left of the box, if our character base is not aligned with this origin we can use the offset to move the character at the point that aligns with the base of the box.
+The bounding box is a box that surrounds the character, it contains the width, height, x-offset and y-offset.
+The origin of the bounding box is at the bottom left of the box, if our character base is not aligned with this origin we can use the offset to move the character at the point that aligns with the base of the box.
 For example, consider the 'R' and 'P' characters, lets give them a bounding box with:
 width = 6
 height = 11
@@ -135,11 +132,11 @@ Example: STARTFONT 2.1
 
 ### FONT
 This indicates the name of the font.
-Example: FONT MyPixelFont
+Example: FONT MyFont
 
 ### CHARS
 This indicates the total number of bitmaps in the file.
-Example: CHARS 97
+Example: CHARS 27
 
 ### STARTCHAR
 This is the first line of each bitmap in the file, the number indicates the unicode code of the character in hexadecimal.
@@ -211,21 +208,19 @@ ENDFONT
 
 The following description uses pyxel 2.5.10
 
-To create a font editor, we first need to undestand how the pyxel lib read the files and print the font in the screen.
+To create a font editor, we first need to undestand how the pyxel lib read the files and draw the font on the screen.
 
 All this proccess can be seem in the following file:
 rust/pyxel-engine/src/font.rs [https://github.com/kitao/pyxel/blob/main/rust/pyxel-engine/src/font.rs]
 
-We need to focus on two importatn parts, what part is readed from the file and how the font is draw:
+We need to focus on two importatn parts, what is readed from the .bdf file and how the text is draw:
 
 ## Reading the File
-On lines 49 to 107 you can see how data is extracted from the .bdf file
-
-The following data is extracted from the file:
+On lines 49 to 107 the following data is extracted from the file:
 • Font bounding box, this is readed as "FONTBOUNDINGBOX width, height, x-offset, y-offset" ( FONTBOUNDINGBOX 10 11 0 -2 )
 • Encoding, this is readed as "ENCODING encoding" ( ENCODING 122 )
 • Dwidth, this is readed as "DWIDTH dwidth 0" ( DWIDTH 7 0 ), only the first number is taken.
-• Bounding box, this is readed as "BBX width, height, x-offset, y-offset" ( BBX 6 13 0 -4 )
+• Glyph bounding box, this is readed as "BBX width, height, x-offset, y-offset" ( BBX 6 13 0 -4 )
 • Bitmap, read all the lines between BITMAP and ENDCHAR, each bitmap line is store as the reversed binary.
 
 ### Bitmap
@@ -268,21 +263,41 @@ Some important points to note:
 • The character size needs to be a multiple of 4.
 
 
+## Drawing the text with the font
+Function "draw" on line 121.
+Some of the inputs this funtion takes are the text string and the xy positions where the text will be draw.
+To draw the text it loops thought each character, drawing one glyph at the time by calling the function "draw_glyph".
+After drawing a glyph the x position is incremented by the current glyph dwidth.
+Note that if the character '\n' is found, the x position will be reset to zero and the y position is incremented by the height of the font bounding box.
 
 
-## Drawing the font
-Line 121 to 161
+The function "draw_glyph" on line 145.
+Some of the inputs this function takes are the xy positions where the glyph will be draw.
+A new xy position are calculated as:
 
-One font bounding box's height is added to the glyph vertical position each time a new line '\n' is found, horizontal position is set to the horizontal starting position.
-The glyph's dwidth is added to the horizontal position when a glyph is finished to draw.
+New x position:
+    x position
++   font bounding box x-offsets
++   glyph bounding box x-offsets
 
+New y position:
+    y position
++   font bounding box y-offsets
++   font bounding box height
+-   glyph bounding box y-offsets
+-   glyph bounding box height
 
-When a single glyph is draw the following happens:
-• Font bounding box and glyph bounding box horizontal positions are added to the horizontal position.
-• Font bounding box vertical position and font bounding box height are added to the vertical position and glyph bounding box vertical position and glyph bounding box height are substrated to the vertical position.
-• The bitmap is draw from the stored binaries from right to left.
+Note: The "height + y-offset" is the base position of the glyph, so we can see the new y position as:
+    y position
++   font bounding box base
+-   glyph bounding box base
+
+The code will loop thought the bitmap drawing the glyph line per line from top to bottom.
+As the binaries in the bitmap are reversed, the pixels are draw from right to left.
 Example:
 Consider the bitmap line: 00001111
 This will be draw in the screen as: 11110000
 
-
+Some important points to note:
+• For the horizontal it will only draw the first bytest correspoding to the glyph bounding box width.
+• For the vertical it will only draw the first lines correspoding to the number of lines in the bitmap.
