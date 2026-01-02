@@ -1,39 +1,71 @@
 # Pyxel_Fonts
 
-The idea of this project is to have a tool to easily create a font file in a ".bdf" format.
-This format was choseen since the pyxel library only can read this type of files.
+Pyxel Fonts is a font editor for the [Pyxel](https://github.com/kitao/pyxel) library.
 
-The following are the only attributes that pyxel will read, any other will be ignore.
+In Pyxel, you can load a font with a .bdf file (Bitmap Distribution Format), this editor can create, edit and visualize these kind of files. You can see the [Observations.md](Observations.md) document to learn more about the .bdf files and how Pyxel read these files.
 
-- FONTBOUNDINGBOX
-- ENCODING
-- DWIDTH
-- BBX
-- BITMAP
-- ENDCHAR
+## Requirements
+pyxel==2.5.10
 
-## Thinks that the tool should be able to do
+---
+---
+
+## ToDo
 
 ### Font Creation
-- Show grid lines.
+- [ ] Show the glyph in a grid.
 - The following values should be able to be set:
-	- Global font bounding box: x, y, width (Not used), height
-	- Encoding number i.e. 65 for 'A'
-	- Space left after the letter (dwidth) i.e. normally the letter width + 1
-	- Individual bounding box: x, y, width, height
-	- bitmap: taken from the grid.
-- The minimum and maximun shall be 0x0 and 32x32 pixels.
+	- [ ] Font bounding box
+	- [ ] Encoding number
+	- [ ] Glyph dwidth
+	- [ ] Glyph bounding box
+	- [ ] Bitmap
+- [ ] The minimum and maximun shall be 0x0 and 32x32 pixels.
 
 ### Font Preview
-Show a small preview of the current bitmap in the grid. This can be done in two ways:
-
-- Save the only letter in a bdf file, read it and show it.
-- Create a replica of the drawing code to draw the text.
-
-Show a editable text as an example. For this a text box would need to be created.
+- [ ] Show a small preview of the current bitmap in the grid. This can be done in two ways:
+- [ ] Show a editable text as an example. For this a text box would need to be created.
 
 ### Font Edit
-If open a file the fonts needs to be added and able to be change.
+- [ ] If open a file the fonts needs to be added and able to be change.
 
-### Read Font File
-Read the file to collect all the encoding numbers in the file and show an example of all the letters.
+
+### Other
+The following is a expectation of how the editor could look.
+
+
+
+    ┌────────────────────────────────────────────────────┐
+    │                                                    │
+    │                                                    │
+    │          ┌─┬─┬─┬─┬─┬─┬─┬─┐                         │
+    │          │ │ │ │ │ │ │ │ │                         │
+    │          ├─┼─┼─┼─┼─┼─┼─┼─┤                         │
+    │          │ │ │ │ │ │ │ │ │                         │
+    │          ├─┼─┼─┼─┼─┼─┼─┼─┤                         │
+    │          │█│█│█│█│ │ │ │ │                         │
+    │          ├─┼─┼─┼─┼─┼─┼─┼─┤                         │
+    │          │█│ │ │ │█│ │ │ │                         │
+    │          ├─┼─┼─┼─┼─┼─┼─┼─┤                         │
+    │          │█│ │ │ │█│ │ │ │                         │
+    │          ├─┼─┼─┼─┼─┼─┼─┼─┤                         │
+    │          │█│█│█│█│ │ │ │ │                         │
+    │          ├─┼─┼─┼─┼─┼─┼─┼─┤                         │
+    │          │█│ │ │ │█│ │ │ │                         │
+    │          ├─┼─┼─┼─┼─┼─┼─┼─┤                         │
+    │          │█│ │ │ │█│ │ │ │                         │
+    │          ├─┼─┼─┼─┼─┼─┼─┼─┤                         │
+    │          │█│ │ │ │█│ │ │ │                         │
+    │          ├─┼─┼─┼─┼─┼─┼─┼─┤                         │
+    │          │ │ │ │ │ │ │ │ │                         │
+    │          ├─┼─┼─┼─┼─┼─┼─┼─┤                         │
+    │          │ │ │ │ │ │ │ │ │                         │
+    │          ├─┼─┼─┼─┼─┼─┼─┼─┤                         │
+    │          │ │ │ │ │ │ │ │ │                         │
+    │          ├─┼─┼─┼─┼─┼─┼─┼─┤                         │
+    │          │ │ │ │ │ │ │ │ │                         │
+    │          └─┴─┴─┴─┴─┴─┴─┴─┘                         │
+    │                                                    │
+    │                                                    │
+    │                                                    │
+    └────────────────────────────────────────────────────┘
